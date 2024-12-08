@@ -1,63 +1,98 @@
 import React, { useEffect, useState } from 'react';
 
-const defaultImage = '/images/image-not-found.webp';
+const defaultImage = '/images/image-not-found.webp'; // Fallback image path
+
+interface ImageMetadata {
+  fileName: string;
+}
 
 const ImageGrid: React.FC = () => {
   const [images, setImages] = useState<string[]>([]);
   const [error, setError] = useState<boolean>(false);
+  const [page, setPage] = useState<number>(1); // Current page for pagination
+  const pageSize = 10; // Number of items per page
 
   useEffect(() => {
-    // Fetch images from localhost:5000/images
-    const fetchImages = async () => {
+    const fetchImagesMetadata = async () => {
       try {
-        const response = await fetch('http://localhost:5000/images');
+        const response = await fetch(
+          `http://localhost:5182/api/pictures?page=${page}&pageSize=${pageSize}`
+        );
         if (!response.ok) {
-          throw new Error('Failed to fetch images');
+          throw new Error('Failed to fetch image metadata');
         }
-        const data = await response.json();
-        setImages(data.images || []); // Assuming the response contains an array of image URLs in a "images" field
+        const data: ImageMetadata[] = await response.json();
+
+        // Fetch image URLs using the second route
+        const imageUrls = await Promise.all(
+          data.map(async (item) => {
+            try {
+              const imageResponse = await fetch(
+                `http://localhost:5182/api/image?fileName=${encodeURIComponent(item.fileName)}`
+              );
+              if (!imageResponse.ok) {
+                throw new Error('Failed to fetch image');
+              }
+              return imageResponse.url; // Use the fetched image's URL
+            } catch {
+              return defaultImage; // Fallback if fetching the image fails
+            }
+          })
+        );
+
+        setImages(imageUrls);
       } catch (err) {
         setError(true);
         console.error(err);
       }
     };
 
-    fetchImages();
-  }, []); // Empty dependency array ensures this only runs once
-
-  // Check if the image URL is valid
-  const getImageSrc = (url: string) => {
-    // Check if the URL is invalid or empty
-    if (!url || !url.startsWith('http')) {
-      return defaultImage;
-    }
-    return url;
-  };
+    fetchImagesMetadata();
+  }, [page]); // Refetch when the page changes
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5 gap-4 mt-4">
+    <div className="container mx-auto mt-4">
       {images.length === 0 && error ? (
         <div className="col-span-full text-center text-xl text-red-500">
           <img
-            src={getImageSrc('')} // Use fallback image if URL is empty or invalid
-            alt="not found" // More descriptive alt text
+            src={defaultImage} // Fallback image when all fetches fail
+            alt="not found"
             className="w-[300px] h-[300px] object-cover rounded-lg mx-auto"
           />
         </div>
-
       ) : (
-        images.map((imageUrl, index) => (
-          <div key={index} className="relative">
-            <div className="border border-gray-300 rounded-lg overflow-hidden shadow-md">
-              <img
-                src={getImageSrc(imageUrl)} // Use fallback image if URL is empty or invalid
-                alt={`Gallery item ${index + 1}`} // More descriptive alt text
-                className="w-full h-auto object-cover rounded-lg"
-              />
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-5 gap-4">
+          {images.map((imageUrl, index) => (
+            <div key={index} className="relative">
+              <div className="border border-gray-300 rounded-lg overflow-hidden shadow-md">
+                <img
+                  src={imageUrl} // Use the fetched image URL
+                  alt={`Gallery item ${index + 1}`}
+                  className="w-full h-auto object-cover rounded-lg"
+                />
+              </div>
             </div>
-          </div>
-        ))
+          ))}
+        </div>
       )}
+
+      {/* Pagination Controls */}
+      <div className="flex justify-center mt-4 space-x-4">
+        <button
+          onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+          className="px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400 disabled:bg-gray-200"
+          disabled={page === 1}
+        >
+          Previous
+        </button>
+        <span className="text-lg font-semibold">Page {page}</span>
+        <button
+          onClick={() => setPage((prev) => prev + 1)}
+          className="px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400"
+        >
+          Next
+        </button>
+      </div>
     </div>
   );
 };
