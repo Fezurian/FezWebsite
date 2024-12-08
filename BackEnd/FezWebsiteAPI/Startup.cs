@@ -28,11 +28,11 @@
             // Add CORS configuration
             services.AddCors(options =>
             {
-                options.AddPolicy("AllowReactFrontend", builder =>
+                options.AddDefaultPolicy(builder =>
                 {
-                    builder.WithOrigins("http://localhost:3000") // React frontend URL
-                           .AllowAnyHeader()
-                           .AllowAnyMethod();
+                    builder.AllowAnyOrigin()
+                           .AllowAnyMethod()
+                           .AllowAnyHeader();
                 });
             });
 
@@ -66,6 +66,8 @@
 
             // Enable CORS
             app.UseCors("AllowReactFrontend");
+            app.UseRouting();
+            app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
 
             // Enable Swagger
             app.UseSwagger();

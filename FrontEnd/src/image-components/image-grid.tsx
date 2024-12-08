@@ -15,9 +15,8 @@ const ImageGrid: React.FC = () => {
   useEffect(() => {
     const fetchImagesMetadata = async () => {
       try {
-        const response = await fetch(
-          `http://localhost:5182/api/pictures?page=${page}&pageSize=${pageSize}`
-        );
+        console.log('/api/pictures?page=${page}&pageSize=${pageSize}', page, pageSize)
+        const response = await fetch(`/api/pictures?page=${page}&pageSize=${pageSize}`); // Call proxy endpoint
         if (!response.ok) {
           throw new Error('Failed to fetch image metadata');
         }
@@ -27,9 +26,8 @@ const ImageGrid: React.FC = () => {
         const imageUrls = await Promise.all(
           data.map(async (item) => {
             try {
-              const imageResponse = await fetch(
-                `http://localhost:5182/api/image?fileName=${encodeURIComponent(item.fileName)}`
-              );
+              console.log('/api/image?fileName=', encodeURIComponent(item.fileName))
+              const imageResponse = await fetch(`/api/image?fileName=${encodeURIComponent(item.fileName)}`); // Call proxy endpoint
               if (!imageResponse.ok) {
                 throw new Error('Failed to fetch image');
               }
