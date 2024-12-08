@@ -17,18 +17,17 @@
 
         public void ConfigureServices(IServiceCollection services)
         {
-            // Map the configuration data to the AppSettings class directly
             services.Configure<AppSettings>(Configuration.GetSection("appSettings.json"));
-            var appSettings = Configuration.Get<AppSettings>()!; // Null-forgiving operator
+            var appSettings = Configuration.Get<AppSettings>()!;
 
             services.TryAddSingleton(appSettings);
             services.TryAddScoped<IPictureService, PictureService>();
             services.TryAddScoped<IPictureRepository, PictureRepository>();
 
-            // Add CORS configuration
+            // CORS Configuration to allow requests from your React frontend
             services.AddCors(options =>
             {
-                options.AddDefaultPolicy(builder =>
+                options.AddPolicy("AllowReactFrontend", builder =>
                 {
                     builder.AllowAnyOrigin()
                            .AllowAnyMethod()
@@ -51,25 +50,20 @@
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            // Configure the HTTP request pipeline.
             if (!env.IsDevelopment())
             {
                 app.UseExceptionHandler("/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
 
             app.UseHttpsRedirection();
-            app.UseStaticFiles();
+            app.UseStaticFiles();  // Enable static file serving from wwwroot
 
             app.UseRouting();
 
-            // Enable CORS
+            // Enable CORS to allow React frontend to make requests
             app.UseCors("AllowReactFrontend");
-            app.UseRouting();
-            app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
 
-            // Enable Swagger
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
