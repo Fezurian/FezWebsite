@@ -13,6 +13,8 @@ const HamburgerMenu: React.FC<HamburgerMenuProps> = ({
   isDarkMode,
   toggleDarkMode,
 }) => {
+  //logic goes here
+
   return (
     <div className="relative">
       <button

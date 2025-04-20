@@ -16,7 +16,7 @@ const ImageGrid: React.FC = () => {
     const fetchImagesMetadata = async () => {
       try {
         const response = await fetch(
-          `http://fezurian.asuscomm.com:5182/api/pictures?page=${page}&pageSize=${pageSize}` // Direct API call
+          `http://localhost:5182/api/pictures?page=${page}&pageSize=${pageSize}` // Direct API call
         );
         if (!response.ok) {
           throw new Error('Failed to fetch image metadata');
@@ -28,7 +28,7 @@ const ImageGrid: React.FC = () => {
           data.map(async (item) => {
             try {
               const imageResponse = await fetch(
-                `http://fezurian.asuscomm.com:5182/api/image?fileName=${encodeURIComponent(item.fileName)}` // Direct API call
+                `http://localhost:5182/api/image?fileName=${encodeURIComponent(item.fileName)}` // Direct API call
               );
               if (!imageResponse.ok) {
                 throw new Error('Failed to fetch image');
